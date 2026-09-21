@@ -25,16 +25,21 @@
 
 \begin{document}
 \maketitle
-
 \begin{abstract}
-Se estudia la representaci\'on de una imagen en los formatos PNG, JPG, BMP
-y TIFF, y su conversi\'on a escala de grises mediante dos ecuaciones
-implementadas con ciclos y la funci\'on nativa de OpenCV. Se comparan el
-tama\~no en disco, la memoria de las matrices, la apariencia visual y la
-intensidad promedio. Los resultados muestran diferencias importantes de
-almacenamiento entre formatos y una gran similitud entre la ponderaci\'on
-NTSC y OpenCV. Para el paisaje analizado, el promedio de los canales
-produce una imagen de menor intensidad media.
+
+En este taller se trabajó con una misma imagen almacenada en formatos PNG,
+JPG, BMP y TIFF, comparando sus dimensiones, tamaño en disco y representación
+en memoria mediante OpenCV.
+
+Posteriormente, la imagen se convirtió a escala de grises mediante dos
+ecuaciones implementadas manualmente con ciclos y mediante la función
+\texttt{cv.cvtColor} de OpenCV.
+
+Los resultados mostraron diferencias importantes en el tamaño de los archivos,
+aunque las imágenes se observaron visualmente similares. En la conversión a
+gris, NTSC y OpenCV produjeron resultados muy parecidos, mientras que el
+método de promedio RGB generó una imagen ligeramente más oscura.
+
 \end{abstract}
 
 \section*{Introducci\'on}
@@ -167,43 +172,46 @@ cv.imwrite("resultados/paisaje_gris.png", image_gris)
 Los archivos guardados corresponden a las im\'agenes generadas en los
 ejercicios anteriores.
 
-\subsection{Medici\'on de intensidad (punto 6)}
-Para una imagen de alto $H$ y ancho $W$, la intensidad promedio es
-\begin{equation}
-\overline{Y}=\frac{1}{HW}\sum_{y=0}^{H-1}\sum_{x=0}^{W-1}Y(y,x).
-\end{equation}
-En esta expresi\'on, $Y(y,x)$ representa el valor de intensidad del p\'ixel
-ubicado en la fila $y$ y la columna $x$. En una imagen en escala de grises,
-cada p\'ixel tiene un solo valor entre 0 y 255: el valor 0 corresponde al
-negro y el valor 255 al blanco. Las sumatorias agregan todos los valores de
-los $H\times W$ p\'ixeles y la divisi\'on por $HW$ calcula su media
-aritm\'etica. Por eso, $\overline{Y}$ resume el brillo promedio de toda la
-imagen: valores mayores indican una imagen globalmente m\'as clara y valores
-menores una imagen globalmente m\'as oscura.
+\subsection{Medición de intensidad (punto 6)}
 
-En el programa, las im\'agenes en escala de grises se almacenan como matrices
-de NumPy. El m\'etodo \texttt{mean()} suma internamente todos los elementos de
-la matriz y los divide por la cantidad total de elementos. Por lo tanto,
-\texttt{image\_gris.mean()} implementa directamente la ecuaci\'on anterior,
-porque la matriz contiene un valor $Y(y,x)$ por cada p\'ixel. En las salidas
-manuales los tres canales contienen el mismo valor $Y$, de modo que su media
-es equivalente a calcular la media de un solo canal.
+Para comparar el brillo de las imágenes obtenidas se calculó su intensidad
+promedio. En una imagen en escala de grises, cada píxel tiene un valor entre
+0 y 255, donde 0 representa negro y 255 representa blanco.
+
+El brillo promedio se obtiene calculando la media de todos los valores de
+los píxeles. Por lo tanto, un valor promedio mayor indica una imagen
+globalmente más clara, mientras que un valor menor indica una imagen más
+oscura.
+
+En Python se utilizó el método \texttt{mean()}:
+
 \begin{lstlisting}
 print("----- BRILLO PROMEDIO -----")
+
 print("NTSC:", image_gris_NTSC.mean())
 print("Promedio RGB:", image_gris_promedio.mean())
 print("OpenCV:", image_gris.mean())
-
-ntsc_1_canal = image_gris_NTSC[:, :, 0]
-diferencia = cv.absdiff(ntsc_1_canal, image_gris)
-print("Diferencia promedio NTSC vs OpenCV:", diferencia.mean())
-print("Diferencia maxima NTSC vs OpenCV:", diferencia.max())
 \end{lstlisting}
-Las salidas manuales tienen tres canales id\'enticos, de modo que su
-media sobre todos los elementos coincide con la media de un solo canal.
-Para comparar p\'ixel a p\'ixel con OpenCV se selecciona uno de ellos.
-\texttt{cv.absdiff} evita el desbordamiento que puede ocurrir al restar
-directamente matrices \texttt{uint8}.
+
+Los resultados obtenidos fueron:
+
+\begin{table}[htbp]
+\centering
+\caption{Intensidad promedio de las imágenes generadas.}
+\begin{tabular}{lr}
+\toprule
+Método & Intensidad promedio\\
+\midrule
+NTSC manual & 126.16\\
+Promedio RGB manual & 121.61\\
+OpenCV & 126.70\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Los valores muestran que NTSC y OpenCV producen imágenes con un brillo
+promedio muy parecido. En cambio, el método de promedio RGB produjo una
+imagen ligeramente más oscura para el paisaje utilizado.
 
 \section{Consideraciones y explicaci\'on de la t\'ecnica}
 \subsection{Representaci\'on y compresi\'on}
@@ -225,27 +233,36 @@ s\'i solo, no permite identificar su compresi\'on ni demostrar fidelidad
 respecto a una fuente. Adem\'as, guardar en un formato sin p\'erdida no
 recupera informaci\'on perdida previamente.
 
-\subsection{Ponderaci\'on, cuantizaci\'on y canales}
-La conversi\'on documentada por OpenCV usa
-$Y=0.299R+0.587G+0.114B$~\cite{opencv}. Su cercan\'ia con
-la ecuaci\'on~\eqref{eq:ntsc} explica la similitud visual. No obstante,
-el coeficiente rojo es ligeramente diferente y el c\'odigo manual aplica
-\texttt{int()}, que trunca los valores no negativos. La cuantizaci\'on
-de la salida nativa tambi\'en influye en las diferencias observadas.
+\subsection{Conversión a escala de grises}
 
-Los pesos NTSC del taller suman $0.9999$ y los del promedio suman
-$0.999$. Por tanto, la ecuaci\'on~\eqref{eq:prom} es una aproximaci\'on
-al promedio aritm\'etico $(R+G+B)/3$. Se mantuvieron los coeficientes
-solicitados; esta aproximaci\'on y el truncamiento introducen un peque\~no
-sesgo hacia intensidades menores.
+Las dos ecuaciones manuales utilizan los canales rojo, verde y azul para
+calcular un nuevo valor de intensidad.
 
-En los m\'etodos manuales, los valores $[Y,Y,Y]$ producen una apariencia
-gris, pero conservan la forma $(533,800,3)$ y los $1\,279\,200$ bytes de
-datos. La conversi\'on nativa produce una matriz de un canal con forma
-$(533,800)$ y $426\,400$ bytes. Ambos casos representan intensidades
-enteras en el rango de 0 (negro) a 255 (blanco). La media se usa aqu\'i
-como indicador de intensidad digital, no como medici\'on f\'isica de
-luminancia ni como medida completa de brillo percibido.
+En el método NTSC se utiliza:
+
+\[
+Y = 0.2989R + 0.5870G + 0.1140B
+\]
+
+Este método asigna un mayor peso al canal verde, seguido del rojo y finalmente
+del azul.
+
+En el método promedio se utiliza:
+
+\[
+Y = 0.333R + 0.333G + 0.333B
+\]
+
+En este caso, los tres canales tienen aproximadamente la misma importancia.
+
+OpenCV también utiliza una combinación ponderada de los canales muy similar
+al método NTSC. Por esta razón, las imágenes obtenidas con NTSC y OpenCV
+se observan prácticamente iguales.
+
+En cambio, el método promedio produjo algunas diferencias visibles,
+principalmente en las zonas de vegetación. En el paisaje utilizado, estas
+zonas aparecen ligeramente más oscuras porque el canal verde recibe menos
+peso que en el método NTSC.
 
 \section{Im\'agenes generadas y resultados}
 \subsection{Formatos y comparaci\'on visual (puntos 1 y 2)}
@@ -345,55 +362,64 @@ Esta \textit{diferencia absoluta media} compara p\'ixeles correspondientes;
 en general no debe confundirse con la diferencia entre las medias.
 
 \section{An\'alisis y conclusiones}
-\subsection{Discusi\'on de los resultados}
-El archivo JPG es el menor de los cuatro, con $192\,680$ bytes, mientras
-que PNG ocupa $876\,700$ bytes. BMP y TIFF se aproximan al volumen de
-datos de la matriz sin comprimir, con peque\~nas diferencias atribuibles
-a la estructura del archivo y su codificaci\'on. Estas observaciones
-corresponden a los archivos evaluados y no establecen una regla universal
-sobre el tama\~no de cada formato.
+\subsection{Discusión de los resultados}
 
-La descompresi\'on explica que archivos de tama\~nos diferentes produzcan
-matrices con el mismo consumo de datos en RAM. La compresi\'on en disco
-y la representaci\'on de la matriz son aspectos distintos: ninguno de
-esos tama\~nos permite, por s\'i solo, determinar la calidad visual.
+Los cuatro formatos conservaron las mismas dimensiones de la imagen al ser
+cargados con OpenCV, pero presentaron tamaños de archivo diferentes.
 
-En la conversi\'on a gris, NTSC y OpenCV asignan al verde un peso cercano
-a $0.587$, frente a $0.333$ en el promedio. Por ello, las zonas con
-predominio de verde pueden quedar m\'as claras con la ponderaci\'on NTSC.
-El resultado global observado es coherente con la presencia de
-vegetaci\'on y con las medias medidas. Sin embargo, no se afirma que el
-promedio siempre sea m\'as oscuro: en regiones dominadas por azul,
-su peso de $0.333$ supera al $0.114$ de NTSC y puede aumentar la intensidad.
+JPG fue el archivo más pequeño, debido a que utiliza compresión con pérdida.
+PNG utiliza compresión sin pérdida, mientras que BMP y TIFF presentaron
+tamaños mayores en el caso estudiado.
 
-La peque\~na discrepancia entre NTSC y OpenCV concuerda con sus
-coeficientes cercanos y con las diferencias de cuantizaci\'on.
-La diferencia m\'axima registrada de un nivel demuestra que los
-resultados no son exactamente iguales, aunque visualmente sean muy
-similares. Por su parte, una media resume la imagen completa y no
-describe por s\'i sola el contraste ni la distribuci\'on espacial de
-las diferencias. Las conclusiones est\'an limitadas al paisaje analizado.
+A pesar de estas diferencias de almacenamiento, las cuatro imágenes se
+observaron visualmente muy similares.
+
+En la conversión a escala de grises se encontró que NTSC y OpenCV producen
+resultados prácticamente iguales. Esto se debe a que ambos métodos asignan
+pesos similares a los canales rojo, verde y azul.
+
+El método de promedio RGB produjo una imagen ligeramente más oscura. Esta
+diferencia se observó principalmente en la vegetación y el llano, donde
+predomina el color verde.
+
+Los valores de intensidad promedio confirmaron esta observación:
+
+\begin{itemize}
+    \item NTSC: 126.16
+    \item Promedio RGB: 121.61
+    \item OpenCV: 126.70
+\end{itemize}
+
+Por lo tanto, para esta imagen, NTSC y OpenCV conservaron un brillo muy
+similar, mientras que el método promedio produjo un resultado ligeramente
+más oscuro.
 
 \subsection{Conclusiones}
+
 \begin{enumerate}
-\item Los formatos evaluados difieren en tama\~no de archivo, pero la
-lectura a color con OpenCV produce matrices de iguales dimensiones,
-tipo y cantidad de elementos. Esto no demuestra igualdad de p\'ixeles.
-\item JPG fue el archivo m\'as peque\~no y utiliza compresi\'on con
-p\'erdida. PNG utiliza compresi\'on sin p\'erdida; BMP y TIFF tuvieron
-tama\~nos cercanos al contenido de la matriz sin comprimir en este caso.
-\item El orden BGR debe respetarse al aplicar ecuaciones expresadas
-en RGB. Las conversiones manuales mediante ciclos permiten hacer
-expl\'icita la contribuci\'on de cada canal.
-\item NTSC y OpenCV produjeron resultados muy similares, con medias
-de $126.162692$ y $126.699651$, respectivamente, y una diferencia
-absoluta m\'axima registrada de un nivel.
-\item El promedio RGB obtuvo una intensidad media de $121.606813$,
-menor que la de las conversiones ponderadas. La diferencia visual en
-la vegetaci\'on es consistente con el menor peso asignado al verde.
-\item Se guardaron las tres conversiones en PNG. La salida OpenCV
-usa un solo canal, mientras que las manuales repiten la intensidad
-en tres canales, con mayor ocupaci\'on de datos en memoria.
+
+    \item Una misma imagen puede almacenarse en diferentes formatos y ocupar
+    tamaños muy distintos en disco, aunque al cargarla con OpenCV conserve
+    las mismas dimensiones.
+
+    \item JPG presentó el menor tamaño de archivo debido a su compresión con
+    pérdida. PNG utiliza compresión sin pérdida, mientras que BMP y TIFF
+    tuvieron tamaños mayores en este ejercicio.
+
+    \item OpenCV carga las imágenes a color utilizando el orden BGR, por lo
+    que este orden debe tenerse en cuenta al aplicar manualmente ecuaciones
+    expresadas en RGB.
+
+    \item La conversión manual mediante NTSC y la conversión realizada por
+    OpenCV produjeron imágenes visualmente muy similares.
+
+    \item El método de promedio RGB produjo una imagen ligeramente más
+    oscura, especialmente en las zonas verdes del paisaje.
+
+    \item Los valores promedio de intensidad fueron 126.16 para NTSC,
+    121.61 para promedio RGB y 126.70 para OpenCV, confirmando las
+    diferencias observadas visualmente.
+
 \end{enumerate}
 
 \begin{thebibliography}{9}
