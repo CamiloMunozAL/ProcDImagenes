@@ -1,0 +1,41 @@
+# Entornos virtuales de Python
+env/
+venv/
+.env/
+.venv/
+ENV/
+
+# Cache y archivos compilados de Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Archivos temporales de Jupyter
+.ipynb_checkpoints/
+
+# Variables de entorno locales
+.env
+.env.*
+!.env.example
+
+# Archivos auxiliares de LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.xdv
+
+# Archivos temporales del sistema y editores
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
