@@ -9,6 +9,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{float}
+\usepackage[hidelinks]{hyperref}
 
 \geometry{letterpaper, margin=2.1cm}
 
@@ -35,6 +36,16 @@ Universidad Tecnológica de Pereira}
 \begin{document}
 
 \maketitle
+
+\begin{center}
+\textbf{Código fuente en GitHub}\\[0.2cm]
+\textbf{Cuaderno o programa Python: }\href
+{https://github.com/CamiloMunozAL/ProcDImagenes/blob/main/taller2/taller2.ipynb}
+{\textcolor{blue}{\underline{\texttt{github.com/CamiloMunozAL/ProcDImagenes/blob/main/taller2/taller2.ipynb}}}}\\[0.15cm]
+\textbf{Carpeta del Taller 2: }\href
+{https://github.com/CamiloMunozAL/ProcDImagenes/tree/main/taller2}
+{\textcolor{blue}{\underline{\texttt{github.com/CamiloMunozAL/ProcDImagenes/tree/main/taller2}}}}
+\end{center}
 
 \begin{abstract}
 En este taller se implementó el cálculo de histogramas para imágenes en escala de grises y a color utilizando Python y OpenCV. Se emplearon dos estrategias: funciones proporcionadas por OpenCV y construcción manual del histograma mediante el recorrido de los píxeles de la imagen. Los resultados permitieron comprobar la relación entre los niveles de intensidad y su frecuencia, así como analizar independientemente los canales azul, verde y rojo de una imagen a color.
