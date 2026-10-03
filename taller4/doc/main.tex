@@ -538,6 +538,28 @@ imagen_local = np.clip(
 ).astype(np.uint8)
 \end{lstlisting}
 
+Para construir los histogramas de la imagen original y de la imagen
+transformada se utilizó \texttt{cv2.calcHist()}, considerando los 256
+niveles de intensidad de una imagen en escala de grises:
+
+\begin{lstlisting}
+hist_original = cv2.calcHist(
+    [imagen],
+    [0],
+    None,
+    [256],
+    [0, 256]
+)
+
+hist_local = cv2.calcHist(
+    [imagen_local],
+    [0],
+    None,
+    [256],
+    [0, 256]
+)
+\end{lstlisting}
+
 El resultado se observa en la
 \hyperref[fig:ecualizacion-local]{Figura~\ref*{fig:ecualizacion-local}}.
 
@@ -565,40 +587,89 @@ La técnica realza detalles, pero puede producir una modificación excesiva cuan
 % =========================================================
 \subsection{Punto 5: Ecualización local manual mediante ciclos}
 
-En este punto se implementó el mismo procedimiento utilizando ciclos.
-
-Para cada píxel se tomó una ventana de $3\times3$:
-
-\begin{lstlisting}
-ventana = imagen_float[
-    fila-1:fila+2,
-    columna-1:columna+2
-]
-\end{lstlisting}
-
-Posteriormente se calcularon:
+En este punto se implementó el mismo procedimiento utilizando ciclos
+anidados. El programa completo utilizado en el cuaderno es el siguiente:
 
 \begin{lstlisting}
-media_local = np.mean(ventana)
+imagen = cv2.imread(
+    "images/PIANO.pgm",
+    cv2.IMREAD_GRAYSCALE
+)
 
-desviacion_estandar_local = (
-    np.std(ventana)
+imagen_float = imagen.astype(np.float32)
+filas, columnas = imagen.shape[:2]
+imagen_local_manual = imagen_float.copy()
+
+media_global = np.mean(imagen_float)
+
+k = 0.5
+Amin = 0.5
+Amax = 2.5
+
+for fila in range(1, filas - 1):
+    for columna in range(1, columnas - 1):
+        ventana = imagen_float[
+            fila - 1:fila + 2,
+            columna - 1:columna + 2
+        ]
+
+        media_local = np.mean(ventana)
+        desviacion_estandar_local = np.std(ventana)
+
+        if desviacion_estandar_local != 0:
+            A = (
+                k * media_global
+                / desviacion_estandar_local
+            )
+        else:
+            A = Amax
+
+        A = np.clip(A, Amin, Amax)
+
+        pixel_original = imagen_float[
+            fila,
+            columna
+        ]
+
+        pixel_transformado = (
+            A * (pixel_original - media_local)
+            + media_local
+        )
+
+        imagen_local_manual[
+            fila,
+            columna
+        ] = np.clip(
+            pixel_transformado,
+            0,
+            255
+        )
+
+imagen_local_manual = imagen_local_manual.astype(
+    np.uint8
+)
+
+histograma_original = cv2.calcHist(
+    [imagen],
+    [0],
+    None,
+    [256],
+    [0, 256]
+)
+
+histograma_local_manual = cv2.calcHist(
+    [imagen_local_manual],
+    [0],
+    None,
+    [256],
+    [0, 256]
 )
 \end{lstlisting}
 
-El factor de realce se calculó mediante:
-
-\begin{lstlisting}
-if desviacion_estandar_local != 0:
-    A = (
-        k * media_global
-        / desviacion_estandar_local
-    )
-else:
-    A = Amax
-\end{lstlisting}
-
-A diferencia del punto anterior, el factor fue limitado mediante:
+Para cada píxel se toma una ventana de $3\times3$ mediante
+desplazamientos de una fila y una columna. Los ciclos no procesan el
+borde de la imagen, porque allí no se puede formar una ventana completa.
+El factor fue limitado mediante:
 
 \begin{equation}
 0.5 \leq A(i,j) \leq 2.5
@@ -608,15 +679,6 @@ utilizando:
 
 \begin{lstlisting}
 A = np.clip(A, Amin, Amax)
-\end{lstlisting}
-
-La transformación del píxel central fue:
-
-\begin{lstlisting}
-pixel_transformado = (
-    A * (pixel_original - media_local)
-    + media_local
-)
 \end{lstlisting}
 
 El resultado se muestra en la
