@@ -2,6 +2,11 @@
 
 Este repositorio contiene el desarrollo del **Taller 5 de Procesamiento Digital de Imágenes**, enfocado en la implementación de filtros espaciales sobre una imagen en escala de grises. Los filtros se construyen mediante ciclos y operaciones de vecindad para estudiar el suavizado, la reducción de ruido y el realce de bordes.
 
+## Enlaces
+
+- [Cuaderno Python del Taller 5](https://github.com/CamiloMunozAL/ProcDImagenes/blob/main/taller5/taller5.ipynb)
+- [Carpeta del Taller 5 en GitHub](https://github.com/CamiloMunozAL/ProcDImagenes/tree/main/taller5)
+
 ## Contenido
 
 El taller desarrolla los siguientes puntos:
