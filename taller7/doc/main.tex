@@ -376,44 +376,30 @@ en imágenes de distintas dimensiones.
 
 \subsection{Procedimiento común de filtrado}
 
-Los seis filtros utilizan el mismo
-procedimiento de transformación y
-reconstrucción.
+Aunque los seis filtros tienen expresiones
+matemáticas diferentes, en el código siguen
+un patrón general común. Primero se calcula
+la transformada de Fourier de la imagen y
+se centra el espectro. Después se construye
+la máscara correspondiente mediante ciclos,
+se multiplica por la transformada centrada
+y se aplica la transformada inversa para
+regresar al dominio espacial.
 
-Lo que cambia entre ellos es la forma
-de construir la máscara $H(u,v)$.
+La diferencia principal entre las funciones
+está en la expresión utilizada para construir
+la máscara $H(u,v)$: el filtro ideal utiliza
+una condición sobre la distancia, Butterworth
+utiliza la frecuencia de corte y el orden,
+y el filtro Gaussiano utiliza una expresión
+exponencial.
 
-Para evitar repetir este procedimiento
-en todas las implementaciones, se creó
-una función auxiliar:
-
-\begin{lstlisting}
-def aplicar_filtro_frecuencia(imagen, mascara):
-
-    # Transformar al dominio de frecuencia
-    transformada = np.fft.fft2(imagen)
-
-    # Centrar el espectro
-    centrada = np.fft.fftshift(transformada)
-
-    # Aplicar la mascara
-    filtrada = centrada * mascara
-
-    # Descentrar la transformada
-    descentrada = np.fft.ifftshift(filtrada)
-
-    # Reconstruir la imagen
-    resultado = np.fft.ifft2(descentrada)
-
-    return np.real(resultado)
-\end{lstlisting}
-
-La FFT se utilizó para realizar las transformadas
-de manera eficiente. Las máscaras de filtrado
-fueron construidas mediante ciclos.
-
-Las funciones principales devuelven la imagen
-procesada y la máscara correspondiente.
+Este procedimiento representa el patrón general
+que comparten las implementaciones del taller;
+no se definió una función auxiliar independiente
+para centralizarlo. Por ello, en los apartados
+siguientes se presenta explícitamente el código
+de cada filtro tal como fue implementado.
 
 % =========================================================
 \section{Desarrollo y resultados}
@@ -478,9 +464,20 @@ def filtro_ideal_paso_bajo(imagen, frecuencia_corte):
             if distancia <= frecuencia_corte:
                 mascara[fila, columna] = 1
 
-    resultado = aplicar_filtro_frecuencia(
-        imagen, mascara
+    transformada = np.fft.fft2(imagen)
+    transformada_centrada = np.fft.fftshift(
+        transformada
     )
+    transformada_filtrada = (
+        transformada_centrada * mascara
+    )
+    transformada_inversa = np.fft.ifftshift(
+        transformada_filtrada
+    )
+    imagen_filtrada = np.fft.ifft2(
+        transformada_inversa
+    )
+    resultado = np.real(imagen_filtrada)
 
     return resultado, mascara
 \end{lstlisting}
@@ -593,9 +590,20 @@ def filtro_butterworth_paso_bajo(
                 )**(2 * orden)
             )
 
-    resultado = aplicar_filtro_frecuencia(
-        imagen, mascara
+    transformada = np.fft.fft2(imagen)
+    transformada_centrada = np.fft.fftshift(
+        transformada
     )
+    transformada_filtrada = (
+        transformada_centrada * mascara
+    )
+    transformada_inversa = np.fft.ifftshift(
+        transformada_filtrada
+    )
+    imagen_filtrada = np.fft.ifft2(
+        transformada_inversa
+    )
+    resultado = np.real(imagen_filtrada)
 
     return resultado, mascara
 \end{lstlisting}
@@ -711,9 +719,20 @@ def filtro_gaussiano_paso_bajo(
                 (2 * frecuencia_corte**2)
             )
 
-    resultado = aplicar_filtro_frecuencia(
-        imagen, mascara
+    transformada = np.fft.fft2(imagen)
+    transformada_centrada = np.fft.fftshift(
+        transformada
     )
+    transformada_filtrada = (
+        transformada_centrada * mascara
+    )
+    transformada_inversa = np.fft.ifftshift(
+        transformada_filtrada
+    )
+    imagen_filtrada = np.fft.ifft2(
+        transformada_inversa
+    )
+    resultado = np.real(imagen_filtrada)
 
     return resultado, mascara
 \end{lstlisting}
@@ -825,9 +844,20 @@ def filtro_ideal_paso_alto(
             if distancia <= frecuencia_corte:
                 mascara[fila, columna] = 0
 
-    resultado = aplicar_filtro_frecuencia(
-        imagen, mascara
+    transformada = np.fft.fft2(imagen)
+    transformada_centrada = np.fft.fftshift(
+        transformada
     )
+    transformada_filtrada = (
+        transformada_centrada * mascara
+    )
+    transformada_inversa = np.fft.ifftshift(
+        transformada_filtrada
+    )
+    imagen_filtrada = np.fft.ifft2(
+        transformada_inversa
+    )
+    resultado = np.real(imagen_filtrada)
 
     return resultado, mascara
 \end{lstlisting}
@@ -938,9 +968,20 @@ def filtro_butterworth_paso_alto(
 
             mascara[fila, columna] = 1 - paso_bajo
 
-    resultado = aplicar_filtro_frecuencia(
-        imagen, mascara
+    transformada = np.fft.fft2(imagen)
+    transformada_centrada = np.fft.fftshift(
+        transformada
     )
+    transformada_filtrada = (
+        transformada_centrada * mascara
+    )
+    transformada_inversa = np.fft.ifftshift(
+        transformada_filtrada
+    )
+    imagen_filtrada = np.fft.ifft2(
+        transformada_inversa
+    )
+    resultado = np.real(imagen_filtrada)
 
     return resultado, mascara
 \end{lstlisting}
@@ -1086,9 +1127,20 @@ def filtro_gaussiano_paso_alto(
 
             mascara[fila, columna] = 1 - paso_bajo
 
-    resultado = aplicar_filtro_frecuencia(
-        imagen, mascara
+    transformada = np.fft.fft2(imagen)
+    transformada_centrada = np.fft.fftshift(
+        transformada
     )
+    transformada_filtrada = (
+        transformada_centrada * mascara
+    )
+    transformada_inversa = np.fft.ifftshift(
+        transformada_filtrada
+    )
+    imagen_filtrada = np.fft.ifft2(
+        transformada_inversa
+    )
+    resultado = np.real(imagen_filtrada)
 
     return resultado, mascara
 \end{lstlisting}
